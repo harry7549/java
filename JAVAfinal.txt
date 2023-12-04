@@ -1,0 +1,241 @@
+ADDProduct.java
+PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+		String pn = request.getParameter("productName");
+		String pd = request.getParameter("productDes");
+		String pp = request.getParameter("productPrice");
+
+		try {
+		    Class.forName("com.mysql.jdbc.Driver");
+		    Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec", "root", "");
+
+		    // Use PreparedStatement to avoid SQL injection
+		    String query = "INSERT INTO productitem (ProductName, ProductDescription, ProductPrice) VALUES (?, ?, ?)";
+		    try (PreparedStatement pst = con.prepareStatement(query)) {
+		        pst.setString(1, pn);
+		        pst.setString(2, pd);
+		        pst.setString(3, pp);
+
+		        pst.executeUpdate();
+		    }
+
+ADDTOCART.JAVA
+PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+
+		int id = Integer.parseInt(request.getParameter("id"));
+		try {
+		    Class.forName("com.mysql.cj.jdbc.Driver");
+		    Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec", "root", "");
+		    
+		    // Use PreparedStatement to avoid SQL injection
+		    String query = "SELECT * FROM productitem WHERE ProductID = ?";
+		    try (PreparedStatement pst = con.prepareStatement(query)) {
+		        pst.setInt(1, id);
+		        ResultSet rs = pst.executeQuery();
+		        
+		        HttpSession ses = request.getSession(false);
+		        ArrayList<ProductDetails> products = (ArrayList<ProductDetails>) ses.getAttribute("products");
+		        ProductDetails pd = new ProductDetails();
+
+		        if (rs.next()) {
+		            pd.setProductID(rs.getInt(1));
+		            pd.setProductName(rs.getString(2));
+		            pd.setProductDes(rs.getString(3));
+		            pd.setProductPrice(rs.getInt(4));
+		        }            
+		        products.add(pd);
+		        
+		        ses.setAttribute("products", products);
+		        response.sendRedirect("UserHomePage.jsp");
+		    }
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+	}
+
+DELETEPRODUCT.JAVA
+PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+		String id = request.getParameter("id");
+
+		try {
+		    Class.forName("com.mysql.cj.jdbc.Driver");
+		    Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec", "root", "");
+		    
+		    // Use PreparedStatement to avoid SQL injection
+		    String query = "DELETE FROM productitem WHERE ProductID = ?";
+		    try (PreparedStatement pst = con.prepareStatement(query)) {
+		        pst.setString(1, id);
+		        pst.executeUpdate();
+		        
+		        response.sendRedirect("HomePagejsp.jsp");
+		    }
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+
+login.java
+PrintWriter out = response.getWriter();
+		response.setContentType("text/html");
+		String email = request.getParameter("email");
+		String pass = request.getParameter("pass");
+
+		try {
+		    Class.forName("com.mysql.cj.jdbc.Driver");
+		    Connection con = DriverManager.getConnection("jdbc:mysql://localhost/yourDB", "yourUsername", "yourPassword");
+
+		    // Use PreparedStatement to avoid SQL injection
+		    String query = "SELECT * FROM users WHERE email = ? AND password = ?";
+		    try (PreparedStatement pst = con.prepareStatement(query)) {
+		        pst.setString(1, email);
+		        pst.setString(2, pass);
+
+		        ResultSet rs = pst.executeQuery();
+
+		        if (rs.next()) {
+		            // Authentication successful
+		            HttpSession session = request.getSession(true);
+		            ArrayList<ProductDetails> products = new ArrayList<ProductDetails>();
+		            session.setAttribute("products", products);
+		            response.sendRedirect("HomePagejsp.jsp");
+		        } else {
+		            // Authentication failed
+		            response.sendRedirect("UserHomePage.jsp");
+		        }
+		    }
+		} catch (Exception e) {
+		    e.printStackTrace();
+		}
+	}
+
+productdetails.java(class)
+int productID;
+	String productName;
+	String productDes;
+	int productPrice;
+	int productQuntity=1;
+thn getter setter
+
+viewcart.jsp
+<%@page import="ProductOperation.ProductDetails"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="ProductOperation.ProductDetails"%>
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Insert title here</title>
+</head>
+<body>
+	<form>
+		<h1 align="center">Cart Details</h1>
+		<table align="center" border="2" style="background-color: skyblue;">
+			<tr>
+				<td>ProductName</td>
+				<td>ProductDescription</td>
+				<td>ProductPrice</td>
+				<td>ProductQuntity</td>
+				<td>TotalPrice</td>
+			</tr>
+			<%
+				try{
+					ArrayList<ProductDetails> products = (ArrayList<ProductDetails>) session.getAttribute("products");
+					
+					for(ProductDetails product:products){
+						int totalprice = product.getProductPrice() * product.getproductQuntity();
+						int id = product.getProductID();
+						%>
+						<tr>
+							<td><%= product.getProductName() %></td>
+							<td><%= product.getProductDes() %></td>
+							<td><%= product.getProductPrice() %></td>
+							
+							<td align="center">
+								<a href="Quantity?id=<%= product.getProductID() %>&op=1" style="text-decoration:none;">+</a>
+								<input type="text" value="<%= product.getproductQuntity() %>" style="width: 20px;">
+								<a href="Quantity?id=<%= product.getProductID() %>&op=0" style="text-decoration:none;">-</a>
+							</td>
+							<td><%= totalprice %></td>
+						</tr>
+						<%
+						
+					}
+				}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			%>
+			</table>
+		<a href="UserHomePage.jsp">Back to Cart</a>
+		<br>
+		<a href="ProductBill.jsp">Make Bill</a>
+	</form>
+			
+
+</body>
+</html>
+
+
+homepage.jsp
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Statement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="java.sql.Connection"%>
+<%@ page language="java" contentType="text/html; charset=ISO-8859-1"
+    pageEncoding="ISO-8859-1"%>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="ISO-8859-1">
+<title>Product Details</title>
+</head>
+<body>
+	<form action="">
+		<table align="center" border="2" bgcolor="skyblue">
+			<tr><td align="center" colspan="5" ><h3>Product Details</h3></td></tr>
+			<tr>
+				<td>ProductID</td>
+				<td>ProductName</td>
+				<td>ProductDescription</td>
+				<td>ProductPrice</td>
+				<td>Action</td>
+			</tr>
+			<%
+				try{
+					Class.forName("com.mysql.jdbc.Driver");
+					Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec","root","");
+					Statement st = con.createStatement();
+					String query = "select * from productitem";
+					ResultSet rs = st.executeQuery(query);
+					
+					while(rs.next()){
+						%>
+						<tr>
+							<td><%= rs.getInt(1) %></td>
+							<td><%= rs.getString(2) %></td>
+							<td><%= rs.getString(3) %></td>
+							<td><%= rs.getString(4) %></td>
+							<td><a href="Update.jsp?id=<%= rs.getInt(1) %>">Update</a></td>
+							<td><a href="deleteProduct?id=<%= rs.getInt(1) %>">Delete</a></td>
+						</tr>
+						<%
+						
+					}
+					
+				}
+			catch(Exception e){
+				e.printStackTrace();
+			}
+			%>
+		</table>
+		<p align="center">Add Product?<a href="AddProduct.html">ADD</a></p>
+		<p align="center">Login?<a href="Login.html">Login</a></p>
+	</form>
+	
+
+
+</body>
+</html>

@@ -1,12 +1,12 @@
-ADDProduct.java
-PrintWriter out = response.getWriter();
+ ADDProduct.java
+		PrintWriter out = response.getWriter();
 		response.setContentType("text/html");
 		String pn = request.getParameter("productName");
 		String pd = request.getParameter("productDes");
 		String pp = request.getParameter("productPrice");
 
 		try {
-		    Class.forName("com.mysql.jdbc.Driver");
+		    Class.forName("com.mysql.cj.jdbc.Driver");
 		    Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec", "root", "");
 
 		    // Use PreparedStatement to avoid SQL injection
@@ -205,7 +205,7 @@ homepage.jsp
 			</tr>
 			<%
 				try{
-					Class.forName("com.mysql.jdbc.Driver");
+					Class.forName("com.mysql.cj.jdbc.Driver");
 					Connection con = DriverManager.getConnection("jdbc:mysql://localhost/cec","root","");
 					Statement st = con.createStatement();
 					String query = "select * from productitem";
